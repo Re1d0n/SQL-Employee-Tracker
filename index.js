@@ -83,4 +83,68 @@ function addDeparment(){
     })
 }
 
+function addEmployee(){
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'firstName',
+            message: 'type employee first name',
+        },
+        {
+            type: 'input',
+            name: 'lastName',
+            message: 'type employee last name',
+        }, 
+    ]) .then(response => {
+        let firstName = response.firstName;
+        let lastName = response.lastName
+        findRoles().then(([roles]) => {
+            const dbRoles= roles.map(role =>({
+                name :role.title
+            }))
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'employeeRole',
+                    message: 'choose employee role',
+                    choices: dbRoles
+                }, 
+            ]) .then(response => {
+                let role = response.employeeRole;
+                findEmployees().then(([employees])=>{
+                    function getManagers(employees) {
+                        if (employees.manager_id===null){
+                            return employees
+                        }
+                    }
+                     const managers = employees.filter(getManagers).map(manager =>({
+                         name : `${manager.first_name}  ${manager.last_name}`
+                     }))
+                     inquirer.prompt({
+                         type: 'list',
+                         name: 'managerName',
+                         message: 'choose a manager',
+                         choices: [...managers,"no manager"]
+                     }) .then(response =>{
+                         const roleID = dbRoles.filter(role =>role.name === role)[0]
+                         const managerId = managers.filter(manager => manager.name === response.managerName)[0]
+                         if (response.managerName==="no manager"){
+                             db.query("INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES(?,?,?,?)",[firstName,lastName,roleID.id,null],(err,data)=>{
+                                if (err){
+                                    throw err
+                                } else {
+                                    console.log ("manager added")
+                                    allfunctions()
+                                }
+                             })
+                        // } else 
+                     })
+                }) 
+            })
+        })
+    })
+}
+const findRoles =()=>db.promise().query("SELECT * FROM role")
 allfunctions()
+
+const findEmployees =()=>db.promise().query("SELECT * FROM employee")
