@@ -138,6 +138,7 @@ function addEmployee(){
                                 }
                              })
                         // } else 
+                            }
                      })
                 }) 
             })
